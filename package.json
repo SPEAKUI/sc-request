@@ -1,0 +1,24 @@
+{
+  "name": "sc-optionify",
+  "version": "0.0.2",
+  "description": "A fluid options module",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "David Tsuji",
+  "license": "MIT",
+  "devDependencies": {
+    "should": "~3.0.1"
+  },
+  "dependencies": {
+    "q": "~1.0.0",
+    "sc-guid": "0.0.x",
+    "sc-haskey": "0.0.x",
+    "sc-is": "0.0.x",
+    "sc-merge": "0.0.x",
+    "sc-queue": "0.0.x",
+    "superagent": "~0.16.0",
+    "type-component": "0.0.1"
+  }
+}
