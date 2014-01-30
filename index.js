@@ -12,7 +12,7 @@ var config = require( "./config.json" ),
 var Request = function ( options ) {
   var self = this;
 
-  options = merge( config, options );
+  options = merge( config.defaults.options, options );
 
   queue = new Queue( function ( task, callback ) {
 

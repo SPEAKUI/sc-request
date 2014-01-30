@@ -1,5 +1,9 @@
 {
-  "maxNumberOfConcurrentXhr": 5,
+  "defaults": {
+    "options": {
+      "maxNumberOfConcurrentXhr": 5
+    }
+  },
   "language": {
     "undefinedStatusMessage": "The server returned an undefined status message",
     "malformedServerResponse": "Malformed server response. Expected a JSON object but got plain text"
