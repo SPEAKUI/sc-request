@@ -1,3 +1,3 @@
-# sc-optionify
+# sc-request
 
-A fluid options module
+A data transaction layer

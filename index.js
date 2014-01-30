@@ -1,87 +1,75 @@
-var q = require( "q" ),
-  request = require( "superagent" ),
+var config = require( "./config.json" ),
+  q = require( "q" ),
+  superagent = require( "superagent" ),
   Queue = require( "sc-queue" ),
   hasKey = require( "sc-haskey" ),
   guid = require( "sc-guid" ),
   merge = require( "sc-merge" ),
   is = require( "sc-is" ),
-  type = require( "type-component" ),
-  defaults,
+  useify = require( "sc-useify" ),
   queue;
 
-defaults = {
-  maxNumberOfConcurrentXhr: 5
-}
+var Request = function ( options ) {
+  var self = this;
 
-var initQueue = function ( options ) {
-
-  options = merge( defaults, options );
+  options = merge( config, options );
 
   queue = new Queue( function ( task, callback ) {
 
-    request( task.data.type, task.data.url )
+    superagent( task.data.type, task.data.url )
       .send( task.data.data )
-      .set( "Accept", "application/json" )
-      .set( "Content-Type", "application/json" )
+      .accept( "json" )
+      .type( "json" )
       .end( function ( error, response ) {
 
         var hasBody = hasKey( response, "body", "object" ) || hasKey( response, "body", "array" ) ? response.body : null,
           responseText = hasKey( response, "text", "string" ) ? response.text.trim() : "",
-          xhrStatusText = hasKey( response, "xhr.statusText", "string" ) ? response.xhr.statusText.trim() : "",
-          defaultResponseText = "The server returned an undefined status message";
+          xhrStatusText = hasKey( response, "xhr.statusText", "string" ) ? response.xhr.statusText.trim() : "";
 
         if ( !error && response[ "ok" ] !== true ) {
-          error = new Error( responseText || xhrStatusText || defaultResponseText );
+          error = new Error( responseText || xhrStatusText || options.language.undefinedStatusMessage );
         }
 
         if ( !error && !hasBody && /^get$/i.test( task.data.type ) ) {
-          error = new Error( "Malformed server response. Expected a JSON object but got plain text" );
+          error = new Error( options.language.malformedServerResponse );
         }
 
-        if ( !error && /^post$/i.test( task.data.type ) ) {
+        // TODO: use middleware to include this functionality
+        // 
+        // if ( !error && /^post$/i.test( task.data.type ) ) {
+        //   var locationString = hasKey( response, "header.location", "string" ) ? response.header.location : "",
+        //     locationGuids = guid.match( locationString ),
+        //     lastGuid = locationGuids[ locationGuids.length - 1 ],
+        //     id = is.empty( lastGuid ) ? null : lastGuid;
+        //   if ( !id ) {
+        //     error = new Error( "While creating the entity the server did not return a valid Id" );
+        //   } else {
+        //     response.body = is.object( response[ "body" ] ) ? response.body : {};
+        //     response.body.__id = id;
+        //   }
+        // }
 
-          var locationString = hasKey( response, "header.location", "string" ) ? response.header.location : "",
-            locationGuids = guid.match( locationString ),
-            lastGuid = locationGuids[ locationGuids.length - 1 ],
-            id = is.empty( lastGuid ) ? null : lastGuid;
+        self.use.run( error, response, function ( middlewareErrors, middlewareResponse ) {
 
-          if ( !id ) {
-            error = new Error( "While creating the entity the server did not return a valid Id" );
-          } else {
-            response.body = type( response[ "body" ] ) === "object" ? response.body : {};
-            response.body.__id = id;
-          }
+          callback( error || middlewareErrors, {
+            defer: task.defer,
+            response: middlewareResponse || response
+          } );
 
-        }
-
-        callback( error, {
-          defer: task.defer,
-          response: response
         } );
 
       } );
 
-  }, config.maxNumberOfConcurrentXhr );
+  }, options.maxNumberOfConcurrentXhr );
 
 };
 
-/**
- * Create an ajax request and return a promise Object
- *
- * @method ajaxRequest
- * @param {Object} has a data, url and type (GET|PUT|POST|DELETE|OPTIONS})
- * @return {Object} a promise Object
- */
-var ajaxRequest = function ( obj, options ) {
+Request.prototype.call = function ( obj, options ) {
   var defer = q.defer(),
     task = {
       data: obj,
       defer: defer
     };
-
-  if ( !queue ) {
-    initQueue( options );
-  }
 
   queue.push( task, function ( error, task ) {
     defer[ error ? "reject" : "resolve" ]( error || task.response.body );
@@ -90,4 +78,16 @@ var ajaxRequest = function ( obj, options ) {
   return defer.promise;
 };
 
-module.exports = ajaxRequest;
+useify( Request );
+
+exports = module.exports = function ( obj, options ) {
+
+  var defer = q.defer(),
+    request = new Request( options );
+
+  request.call( obj, options ).then( defer.resolve ).fail( defer.reject );
+
+  return defer.promise;
+};
+
+exports.use = Request.prototype.use;

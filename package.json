@@ -1,15 +1,19 @@
 {
-  "name": "sc-optionify",
+  "name": "sc-request",
   "version": "0.0.2",
-  "description": "A fluid options module",
+  "description": "A data transaction layer",
   "main": "index.js",
   "scripts": {
+    "pretest": "./node_modules/.bin/forever start server/request.js",
+    "posttest": "./node_modules/.bin/forever stop server/request.js",
     "test": "mocha"
   },
   "author": "David Tsuji",
   "license": "MIT",
   "devDependencies": {
-    "should": "~3.0.1"
+    "should": "~3.0.1",
+    "express": "~3.4.8",
+    "forever": "~0.10.11"
   },
   "dependencies": {
     "q": "~1.0.0",
@@ -18,7 +22,7 @@
     "sc-is": "0.0.x",
     "sc-merge": "0.0.x",
     "sc-queue": "0.0.x",
-    "superagent": "~0.16.0",
-    "type-component": "0.0.1"
+    "sc-useify": "0.0.x",
+    "superagent": "~0.16.0"
   }
 }
