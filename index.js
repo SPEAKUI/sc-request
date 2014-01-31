@@ -49,7 +49,7 @@ var Request = function ( options ) {
         //   }
         // }
 
-        self.use.run( error, response, function ( middlewareErrors, middlewareResponse ) {
+        self.middleware( error, response, function ( middlewareErrors, middlewareResponse ) {
 
           callback( error || middlewareErrors, {
             defer: task.defer,
@@ -90,4 +90,4 @@ exports = module.exports = function ( obj, options ) {
   return defer.promise;
 };
 
-exports.use = Request.prototype.use;
+exports.use = Request.use;
