@@ -1,6 +1,6 @@
 build:
 	@npm install
-	@mocha
+	@npm test
 
 dist:
 	@browserify index.js -o index.dist.js

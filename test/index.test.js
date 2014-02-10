@@ -8,14 +8,14 @@ describe( "request", function () {
 
   it( "should integrate middleware", function ( done ) {
 
-    request.use( function ( _error, _response, _next ) {
+    request.use( "postRequest", function ( _error, _response, _next ) {
 
       _response.body.hash = "brown";
       _next( _error, _response );
 
     } );
 
-    request.use( function ( _error, _response, _next ) {
+    request.use( "postRequest", function ( _error, _response, _next ) {
 
       _response.body.chicken = "tasty";
       _next( _error, _response );

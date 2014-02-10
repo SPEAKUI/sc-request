@@ -16,8 +16,7 @@ var Request = function ( options ) {
 
   queue = new Queue( function ( task, callback ) {
 
-    superagent( task.data.type, task.data.url )
-      .send( task.data.data )
+    superagent( task.data.type, task.data.url )[ /get/i.test( task.data.type ) ? "query" : "send" ]( task.data.data )
       .accept( "json" )
       .type( "json" )
       .end( function ( error, response ) {
@@ -34,22 +33,7 @@ var Request = function ( options ) {
           error = new Error( options.language.malformedServerResponse );
         }
 
-        // TODO: use middleware to include this functionality
-        // 
-        // if ( !error && /^post$/i.test( task.data.type ) ) {
-        //   var locationString = hasKey( response, "header.location", "string" ) ? response.header.location : "",
-        //     locationGuids = guid.match( locationString ),
-        //     lastGuid = locationGuids[ locationGuids.length - 1 ],
-        //     id = is.empty( lastGuid ) ? null : lastGuid;
-        //   if ( !id ) {
-        //     error = new Error( "While creating the entity the server did not return a valid Id" );
-        //   } else {
-        //     response.body = is.object( response[ "body" ] ) ? response.body : {};
-        //     response.body.__id = id;
-        //   }
-        // }
-
-        self.middleware( error, response, function ( middlewareErrors, middlewareResponse ) {
+        self.middleware( "postRequest", error, response, function ( middlewareErrors, middlewareResponse ) {
 
           callback( error || middlewareErrors, {
             defer: task.defer,
