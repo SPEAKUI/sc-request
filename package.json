@@ -1,6 +1,6 @@
 {
   "name": "sc-request",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A data transaction layer",
   "main": "index.js",
   "scripts": {
