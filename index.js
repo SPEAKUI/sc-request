@@ -33,14 +33,14 @@ var Request = function ( options ) {
           error = new Error( options.language.malformedServerResponse );
         }
 
-        self.middleware( "postRequest", error, response, function ( middlewareErrors, middlewareResponse ) {
+        self.middleware( "postRequest", function ( middlewareErrors, middlewareResponse ) {
 
           callback( error || middlewareErrors, {
             defer: task.defer,
             response: middlewareResponse || response
           } );
 
-        } );
+        }, error, response );
 
       } );
 
