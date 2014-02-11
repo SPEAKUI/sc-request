@@ -3,7 +3,6 @@ var express = require( 'express' ),
   app = express(),
   dummy = require( "../test/index.test.json" );
 
-// app.set( 'port', process.env.PORT || 3000 );
 app.use( express.logger( "dev" ) );
 app.use( express.json() );
 app.use( express.urlencoded() );

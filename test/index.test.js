@@ -1,7 +1,3 @@
-// var should = require( "should" ),
-//   dummy = require( "./index.test.json" ),
-//   request = require( ".." );
-
 var dummy,
   request = screquest;
 
