@@ -1,9 +1,6 @@
 build:
 	@npm install
+	@./node_modules/.bin/browserify index.js -o screquest.js -s screquest
 	@npm test
-
-dist:
-	@browserify index.js -o index.dist.js
-	@uglifyjs index.dist.js -o index.dist.min.js
 
 .PHONY: build
