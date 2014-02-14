@@ -7,5 +7,5 @@
         "malformedServerResponse": "Malformed server response. Expected a JSON object but got plain text"
       }
     }
-  },
+  }
 }
