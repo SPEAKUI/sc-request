@@ -82,7 +82,7 @@ describe( "request", function () {
 
   } );
 
-  it( "should integrate middleware", function ( done ) {
+  it( "should integrate middleware", function ( _done ) {
 
     request.use( "postRequest", function ( _error, _response, _next ) {
 
@@ -109,10 +109,29 @@ describe( "request", function () {
       res.name.should.equal( dummy.data.people[ 2 ].name );
       res.hash.should.equal( "brown" );
       res.chicken.should.equal( "tasty" );
+      request.useify.clear( "postRequest" );
 
-      done();
+      _done();
 
-    } ).fail( done );
+    } ).fail( _done );
+
+  } );
+
+  it( "should handle a malformed server response", function ( _done ) {
+
+    request( {
+      type: "get",
+      url: "http://localhost:3000/api/malformed-server-reponse"
+    } ).then( function ( wat ) {
+
+      _done( new Error( "A malfored server response should fail" ) );
+
+    } ).fail( function ( error ) {
+
+      error.should.be.an.Error;
+      _done();
+
+    } );
 
   } );
 

@@ -35,4 +35,8 @@ app.del( "/api/person/:id", function ( req, res ) {
   } ) );
 } );
 
+app.get( "/api/malformed-server-reponse", function ( req, res ) {
+  res.send( "bad" );
+} );
+
 app.listen( 3000 );

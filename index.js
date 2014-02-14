@@ -75,3 +75,4 @@ exports = module.exports = function ( obj, options ) {
 };
 
 exports.use = Request.use;
+exports.useify = Request.useify;

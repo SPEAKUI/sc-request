@@ -2,13 +2,13 @@
 module.exports={
   "defaults": {
     "options": {
-      "maxNumberOfConcurrentXhr": 5
+      "maxNumberOfConcurrentXhr": 5,
+      "language": {
+        "undefinedStatusMessage": "The server returned an undefined status message",
+        "malformedServerResponse": "Malformed server response. Expected a JSON object but got plain text"
+      }
     }
   },
-  "language": {
-    "undefinedStatusMessage": "The server returned an undefined status message",
-    "malformedServerResponse": "Malformed server response. Expected a JSON object but got plain text"
-  }
 }
 },{}],2:[function(_dereq_,module,exports){
 var config = _dereq_( "./config.json" ),
@@ -88,7 +88,8 @@ exports = module.exports = function ( obj, options ) {
 };
 
 exports.use = Request.use;
-},{"./config.json":1,"q":4,"sc-guid":5,"sc-haskey":6,"sc-is":8,"sc-merge":13,"sc-queue":15,"sc-useify":18,"superagent":19}],3:[function(_dereq_,module,exports){
+exports.useify = Request.useify;
+},{"./config.json":1,"q":4,"sc-guid":5,"sc-haskey":6,"sc-is":8,"sc-merge":13,"sc-queue":15,"sc-useify":17,"superagent":18}],3:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -144,7 +145,8 @@ process.chdir = function (dir) {
 };
 
 },{}],4:[function(_dereq_,module,exports){
-(function (process){// vim:ts=4:sts=4:sw=4:
+(function (process){
+// vim:ts=4:sts=4:sw=4:
 /*!
  *
  * Copyright 2009-2012 Kris Kowal under the terms of the MIT
@@ -2079,6 +2081,7 @@ var qEndingLine = captureLine();
 return Q;
 
 });
+
 }).call(this,_dereq_("/Users/dts/Sites/SitecoreSPEAK/utils/sc-request/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
 },{"/Users/dts/Sites/SitecoreSPEAK/utils/sc-request/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":3}],5:[function(_dereq_,module,exports){
 var guidRx = "{?[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}}?";
@@ -2113,7 +2116,7 @@ function hasKey( object, keys, keyType ) {
   keyType = type( keyType ) === "string" ? keyType : "";
 
   var key = keys.length > 0 ? keys.shift() : "",
-    keyExists = has.call( object, key ),
+    keyExists = has.call( object, key ) || object[ key ] !== void 0,
     keyValue = keyExists ? object[ key ] : undefined,
     keyTypeIsCorrect = type( keyValue ) === keyType;
 
@@ -2301,7 +2304,7 @@ module.exports=_dereq_(7)
  * Based on : https://github.com/component/queue
  */
 
-var type = _dereq_( "type-component" ),
+var is = _dereq_( "sc-is" ),
   drainedTimeout,
   noop = function () {};
 
@@ -2309,18 +2312,18 @@ function Queue( worker, concurrency ) {
   var self = this;
 
   self.worker = worker;
-  self.concurrency = type( concurrency ) === "number" ? concurrency : 1;
+  self.concurrency = is.a.number( concurrency ) ? concurrency : 1;
   self.pending = 0;
   self.jobs = [];
+  self.errors = [];
 
 }
 
 Queue.prototype.drain = noop;
-
 Queue.prototype.push = function ( data, callback ) {
   var self = this;
 
-  callback = type( callback ) === "function" ? callback : noop;
+  callback = is.a.func( callback ) ? callback : noop;
 
   self.jobs.push( {
     data: data,
@@ -2347,8 +2350,14 @@ Queue.prototype.exec = function ( job ) {
 
   self.pending++;
 
-  self.worker( job.data, function () {
+  self.worker( job.data, function ( error ) {
 
+    if ( error ) {
+      self.errors.push( {
+        data: job.data,
+        error: error
+      } );
+    }
     job.callback.apply( self, arguments );
     self.pending--;
     self.run();
@@ -2357,7 +2366,8 @@ Queue.prototype.exec = function ( job ) {
 
     drainedTimeout = setTimeout( function () {
       if ( self.jobs.length === 0 ) {
-        self.drain();
+        self.drain( self.errors.length > 0 ? self.errors : null );
+        self.errors = [];
       }
     }, 10 );
 
@@ -2366,15 +2376,13 @@ Queue.prototype.exec = function ( job ) {
 };
 
 module.exports = Queue;
-},{"type-component":16}],16:[function(_dereq_,module,exports){
-module.exports=_dereq_(7)
-},{}],17:[function(_dereq_,module,exports){
+},{"sc-is":8}],16:[function(_dereq_,module,exports){
 module.exports={
 	"defaults": {
 		"middlewareKey": "all"
 	}
 }
-},{}],18:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 var is = _dereq_( "sc-is" ),
   config = _dereq_( "./config.json" ),
   noop = function () {};
@@ -2483,7 +2491,7 @@ module.exports = function ( _objectOrFunction ) {
   }
 
 };
-},{"./config.json":17,"sc-is":8}],19:[function(_dereq_,module,exports){
+},{"./config.json":16,"sc-is":8}],18:[function(_dereq_,module,exports){
 /**
  * Module dependencies.
  */
@@ -3479,7 +3487,7 @@ request.put = function(url, data, fn){
 
 module.exports = request;
 
-},{"emitter":20,"reduce":21}],20:[function(_dereq_,module,exports){
+},{"emitter":19,"reduce":20}],19:[function(_dereq_,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -3637,7 +3645,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 
 /**
  * Reduce `arr` with `fn`.
