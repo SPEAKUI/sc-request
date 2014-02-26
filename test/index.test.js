@@ -135,4 +135,30 @@ describe( "request", function () {
 
   } );
 
+  it( "should request with a mix of querying string and body data", function ( _done ) {
+
+    request( {
+      type: "post",
+      url: "http://localhost:3000/api/mixed-body-querystring-data",
+      data: {
+        name: "david",
+        age: 30
+      },
+      query: {
+        database: "master",
+        language: "en"
+      }
+    } ).then( function ( res ) {
+
+      res.body.name.should.eql( "david" );
+      res.body.age.should.eql( 30 );
+      res.query.database.should.eql( "master" );
+      res.query.language.should.eql( "en" );
+
+      _done();
+
+    } ).fail( _done );
+
+  } );
+
 } );

@@ -8,7 +8,7 @@ module.exports={
         "malformedServerResponse": "Malformed server response. Expected a JSON object but got plain text"
       }
     }
-  },
+  }
 }
 },{}],2:[function(_dereq_,module,exports){
 var config = _dereq_( "./config.json" ),
@@ -30,6 +30,7 @@ var Request = function ( options ) {
   queue = new Queue( function ( task, callback ) {
 
     superagent( task.data.type, task.data.url )[ /get/i.test( task.data.type ) ? "query" : "send" ]( task.data.data )
+      .query( task.data.query )
       .accept( "json" )
       .type( "json" )
       .end( function ( error, response ) {
@@ -67,6 +68,8 @@ Request.prototype.call = function ( obj, options ) {
       data: obj,
       defer: defer
     };
+
+  task.data.query = is.an.object( task.data[ "query" ] ) ? task.data.query : {};
 
   queue.push( task, function ( error, task ) {
     defer[ error ? "reject" : "resolve" ]( error || task.response.body );

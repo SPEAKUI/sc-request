@@ -9,6 +9,10 @@
     "posttest": "./node_modules/.bin/forever stop server/request.js",
     "test": "./node_modules/.bin/mocha-phantomjs -p node_modules/.bin/phantomjs -s localToRemoteUrlAccessEnabled=true -s webSecurityEnabled=false test/index.test.html"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SPEAKUI/sc-request"
+  },
   "author": "David Tsuji",
   "license": "MIT",
   "devDependencies": {
