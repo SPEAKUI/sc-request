@@ -147,6 +147,9 @@ describe( "request", function () {
       query: {
         database: "master",
         language: "en"
+      },
+      header: {
+        "x-request": "value"
       }
     } ).then( function ( res ) {
 

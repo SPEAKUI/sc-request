@@ -31,6 +31,7 @@ var Request = function ( options ) {
 
     superagent( task.data.type, task.data.url )[ /get/i.test( task.data.type ) ? "query" : "send" ]( task.data.data )
       .query( task.data.query )
+      .set( task.data.header || {} )
       .accept( "json" )
       .type( "json" )
       .end( function ( error, response ) {
@@ -92,7 +93,7 @@ exports = module.exports = function ( obj, options ) {
 
 exports.use = Request.use;
 exports.useify = Request.useify;
-},{"./config.json":1,"q":4,"sc-guid":5,"sc-haskey":6,"sc-is":8,"sc-merge":13,"sc-queue":15,"sc-useify":17,"superagent":18}],3:[function(_dereq_,module,exports){
+},{"./config.json":1,"q":4,"sc-guid":5,"sc-haskey":6,"sc-is":8,"sc-merge":14,"sc-queue":16,"sc-useify":18,"superagent":19}],3:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -475,22 +476,6 @@ if (typeof ReturnValue !== "undefined") {
     };
 }
 
-// Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
-// engine that has a deployed base of browsers that support generators.
-// However, SM's generators use the Python-inspired semantics of
-// outdated ES6 drafts.  We would like to support ES6, but we'd also
-// like to make it possible to use generators in deployed browsers, so
-// we also support Python-style generators.  At some point we can remove
-// this block.
-var hasES6Generators;
-try {
-    /* jshint evil: true, nonew: false */
-    new Function("(function* (){ yield 1; })");
-    hasES6Generators = true;
-} catch (e) {
-    hasES6Generators = false;
-}
-
 // long stack traces
 
 var STACK_JUMP_SEPARATOR = "From previous event:";
@@ -791,6 +776,7 @@ defer.prototype.makeNodeResolver = function () {
  * @returns a promise that may be resolved with the given resolve and reject
  * functions, or rejected by a thrown exception in resolver
  */
+Q.Promise = promise; // ES6
 Q.promise = promise;
 function promise(resolver) {
     if (typeof resolver !== "function") {
@@ -804,6 +790,11 @@ function promise(resolver) {
     }
     return deferred.promise;
 }
+
+promise.race = race; // ES6
+promise.all = all; // ES6
+promise.reject = reject; // ES6
+promise.resolve = Q; // ES6
 
 // XXX experimental.  This method is a way to denote that a local value is
 // serializable and should be immediately dispatched to a remote upon request,
@@ -1129,42 +1120,14 @@ Promise.prototype.isRejected = function () {
 // shimmed environments, this would naturally be a `Set`.
 var unhandledReasons = [];
 var unhandledRejections = [];
-var unhandledReasonsDisplayed = false;
 var trackUnhandledRejections = true;
-function displayUnhandledReasons() {
-    if (
-        !unhandledReasonsDisplayed &&
-        typeof window !== "undefined" &&
-        window.console
-    ) {
-        console.warn("[Q] Unhandled rejection reasons (should be empty):",
-                     unhandledReasons);
-    }
-
-    unhandledReasonsDisplayed = true;
-}
-
-function logUnhandledReasons() {
-    for (var i = 0; i < unhandledReasons.length; i++) {
-        var reason = unhandledReasons[i];
-        console.warn("Unhandled rejection reason:", reason);
-    }
-}
 
 function resetUnhandledRejections() {
     unhandledReasons.length = 0;
     unhandledRejections.length = 0;
-    unhandledReasonsDisplayed = false;
 
     if (!trackUnhandledRejections) {
         trackUnhandledRejections = true;
-
-        // Show unhandled rejection reasons if Node exits without handling an
-        // outstanding rejection.  (Note that Browserify presently produces a
-        // `process` global without the `EventEmitter` `on` method.)
-        if (typeof process !== "undefined" && process.on) {
-            process.on("exit", logUnhandledReasons);
-        }
     }
 }
 
@@ -1179,7 +1142,6 @@ function trackRejection(promise, reason) {
     } else {
         unhandledReasons.push("(no stack) " + reason);
     }
-    displayUnhandledReasons();
 }
 
 function untrackRejection(promise) {
@@ -1203,9 +1165,6 @@ Q.getUnhandledReasons = function () {
 
 Q.stopUnhandledRejectionTracking = function () {
     resetUnhandledRejections();
-    if (typeof process !== "undefined" && process.on) {
-        process.removeListener("exit", logUnhandledReasons);
-    }
     trackUnhandledRejections = false;
 };
 
@@ -1369,7 +1328,17 @@ function async(makeGenerator) {
         // when verb is "throw", arg is an exception
         function continuer(verb, arg) {
             var result;
-            if (hasES6Generators) {
+
+            // Until V8 3.19 / Chromium 29 is released, SpiderMonkey is the only
+            // engine that has a deployed base of browsers that support generators.
+            // However, SM's generators use the Python-inspired semantics of
+            // outdated ES6 drafts.  We would like to support ES6, but we'd also
+            // like to make it possible to use generators in deployed browsers, so
+            // we also support Python-style generators.  At some point we can remove
+            // this block.
+
+            if (typeof StopIteration === "undefined") {
+                // ES6 Generators
                 try {
                     result = generator[verb](arg);
                 } catch (exception) {
@@ -1381,6 +1350,7 @@ function async(makeGenerator) {
                     return when(result.value, callback, errback);
                 }
             } else {
+                // SpiderMonkey Generators
                 // FIXME: Remove this case when SM does ES6 generators.
                 try {
                     result = generator[verb](arg);
@@ -2085,9 +2055,9 @@ return Q;
 
 });
 
-}).call(this,_dereq_("/Users/dts/Sites/SitecoreSPEAK/utils/sc-request/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
-},{"/Users/dts/Sites/SitecoreSPEAK/utils/sc-request/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":3}],5:[function(_dereq_,module,exports){
-var guidRx = "{?[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}}?";
+}).call(this,_dereq_("E:\\asimov\\sc-request\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js"))
+},{"E:\\asimov\\sc-request\\node_modules\\browserify\\node_modules\\insert-module-globals\\node_modules\\process\\browser.js":3}],5:[function(_dereq_,module,exports){
+var guidRx = "{?[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}}?";
 
 exports.generate = function () {
   var d = new Date().getTime();
@@ -2194,7 +2164,8 @@ var ises = {
   "string": [ "string", type( "string" ) ],
   "undefined": [ "undefined", type( "undefined" ) ],
   "empty": [ "empty", _dereq_( "./ises/empty" ) ],
-  "nullorundefined": [ "nullOrUndefined", "nullorundefined", _dereq_( "./ises/nullorundefined" ) ]
+  "nullorundefined": [ "nullOrUndefined", "nullorundefined", _dereq_( "./ises/nullorundefined" ) ],
+  "guid": [ "guid", _dereq_( "./ises/guid" ) ]
 }
 
 Object.keys( ises ).forEach( function ( key ) {
@@ -2211,8 +2182,9 @@ Object.keys( ises ).forEach( function ( key ) {
 
 } );
 
-module.exports = is;
-},{"./ises/empty":9,"./ises/nullorundefined":10,"./ises/type":11}],9:[function(_dereq_,module,exports){
+exports = module.exports = is;
+exports.type = type;
+},{"./ises/empty":9,"./ises/guid":10,"./ises/nullorundefined":11,"./ises/type":12}],9:[function(_dereq_,module,exports){
 var type = _dereq_("../type");
 
 module.exports = function ( value ) {
@@ -2233,11 +2205,17 @@ module.exports = function ( value ) {
   return empty;
 
 };
-},{"../type":12}],10:[function(_dereq_,module,exports){
+},{"../type":13}],10:[function(_dereq_,module,exports){
+var guid = _dereq_( "sc-guid" );
+
+module.exports = function ( value ) {
+  return guid.isValid( value );
+};
+},{"sc-guid":5}],11:[function(_dereq_,module,exports){
 module.exports = function ( value ) {
 	return value === null || value === undefined || value === void 0;
 };
-},{}],11:[function(_dereq_,module,exports){
+},{}],12:[function(_dereq_,module,exports){
 var type = _dereq_( "../type" );
 
 module.exports = function ( _type ) {
@@ -2245,7 +2223,7 @@ module.exports = function ( _type ) {
     return type( _value ) === _type;
   }
 }
-},{"../type":12}],12:[function(_dereq_,module,exports){
+},{"../type":13}],13:[function(_dereq_,module,exports){
 var toString = Object.prototype.toString;
 
 module.exports = function ( val ) {
@@ -2268,7 +2246,7 @@ module.exports = function ( val ) {
 
   return typeof val;
 };
-},{}],13:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 var type = _dereq_( "type-component" );
 
 var merge = function () {
@@ -2300,9 +2278,9 @@ var merge = function () {
 };
 
 module.exports = merge;
-},{"type-component":14}],14:[function(_dereq_,module,exports){
+},{"type-component":15}],15:[function(_dereq_,module,exports){
 module.exports=_dereq_(7)
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 /**
  * Based on : https://github.com/component/queue
  */
@@ -2379,13 +2357,13 @@ Queue.prototype.exec = function ( job ) {
 };
 
 module.exports = Queue;
-},{"sc-is":8}],16:[function(_dereq_,module,exports){
+},{"sc-is":8}],17:[function(_dereq_,module,exports){
 module.exports={
 	"defaults": {
 		"middlewareKey": "all"
 	}
 }
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 var is = _dereq_( "sc-is" ),
   config = _dereq_( "./config.json" ),
   noop = function () {};
@@ -2445,7 +2423,13 @@ Useify.prototype.middleware = function () {
 };
 
 Useify.prototype.clear = function ( middlewareKey ) {
-  this.functions[ middlewareKey || config.defaults.middlewareKey ] = [];
+  if ( is.a.string( middlewareKey ) && is.not.empty( middlewareKey ) ) {
+    this.functions[ middlewareKey ] = [];
+  } else {
+    this.functions = {
+      all: []
+    };
+  }
 };
 
 module.exports = function ( _objectOrFunction ) {
@@ -2494,7 +2478,7 @@ module.exports = function ( _objectOrFunction ) {
   }
 
 };
-},{"./config.json":16,"sc-is":8}],18:[function(_dereq_,module,exports){
+},{"./config.json":17,"sc-is":8}],19:[function(_dereq_,module,exports){
 /**
  * Module dependencies.
  */
@@ -3490,7 +3474,7 @@ request.put = function(url, data, fn){
 
 module.exports = request;
 
-},{"emitter":19,"reduce":20}],19:[function(_dereq_,module,exports){
+},{"emitter":20,"reduce":21}],20:[function(_dereq_,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -3648,7 +3632,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 
 /**
  * Reduce `arr` with `fn`.
