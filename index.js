@@ -18,6 +18,7 @@ var Request = function ( options ) {
 
     superagent( task.data.type, task.data.url )[ /get/i.test( task.data.type ) ? "query" : "send" ]( task.data.data )
       .query( task.data.query )
+      .set( task.data.header || {} )
       .accept( "json" )
       .type( "json" )
       .end( function ( error, response ) {
